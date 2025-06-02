@@ -1,12 +1,42 @@
 use super::terminal::{Size, Terminal};
 use std::io::Error;
 
+mod buffer;
+use buffer::Buffer;
+
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub struct View;
+#[derive(Default)]
+pub struct View {
+    buffer: Buffer,
+}
 
 impl View {
+    pub fn render(&self) -> Result<(), Error> {
+        let Size { height, .. } = Terminal::size()?;
+
+        for current_row in 0..height {
+            Terminal::clear_line()?;
+            if let Some(line) = self.buffer.lines.get(current_row) {
+                Terminal::print(line)?;
+                Terminal::print("\r\n")?;
+                continue;
+            }
+            // text doesnt need to be in absolute middle
+            #[allow(clippy::integer_division)]
+            if current_row == height / 3 {
+                Self::draw_welcome_message()?;
+            } else {
+                Self::draw_empty_row()?;
+            }
+            if current_row.saturating_add(1) < height {
+                Terminal::print("\r\n")?;
+            }
+        }
+        Ok(())
+    }
+
     fn draw_welcome_message() -> Result<(), Error> {
         let mut welcome_message = format!("{NAME} -- version {VERSION}");
         let width = Terminal::size()?.width;
@@ -23,26 +53,6 @@ impl View {
 
     fn draw_empty_row() -> Result<(), Error> {
         Terminal::print("~")?;
-        Ok(())
-    }
-
-    pub fn render() -> Result<(), Error> {
-        let Size { height, .. } = Terminal::size()?;
-        Terminal::clear_line()?;
-        Terminal::print("Hello World\r\n")?;
-        for current_row in 1..height {
-            Terminal::clear_line()?;
-            // text doesnt need to be in absolute middle
-            #[allow(clippy::integer_division)]
-            if current_row == height / 3 {
-                Self::draw_welcome_message()?;
-            } else {
-                Self::draw_empty_row()?;
-            }
-            if current_row.saturating_add(1) < height {
-                Terminal::print("\r\n")?;
-            }
-        }
         Ok(())
     }
 }
