@@ -82,7 +82,7 @@ impl Editor {
                 x = width.saturating_sub(1);
             }
             _ => (),
-        };
+        }
         self.location = Location { x, y };
         Ok(())
     }

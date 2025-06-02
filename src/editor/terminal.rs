@@ -16,7 +16,7 @@ pub struct Position {
     pub row: usize,
 }
 
-pub struct Terminal {}
+pub struct Terminal;
 
 impl Terminal {
     pub fn queue_command<T: Command>(command: T) -> Result<(), Error> {
@@ -73,11 +73,12 @@ impl Terminal {
     /// Returns current size of the terminal.
     /// `Size` coords will be truncated to `usize` if `usize` < `x` < `u16`.
     pub fn size() -> Result<Size, Error> {
-        let (width, height) = size()?;
-        Ok(Size {
-            height: height as usize,
-            width: width as usize,
-        })
+        let (width_u16, height_u16) = size()?;
+        #[allow(clippy::as_conversions)]
+        let height = height_u16 as usize;
+        #[allow(clippy::as_conversions)]
+        let width = width_u16 as usize;
+        Ok(Size { height, width })
     }
 
     pub fn execute() -> Result<(), Error> {
